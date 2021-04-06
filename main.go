@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -21,16 +22,18 @@ var tpl *template.Template
 var cubes []Cube
 
 func index(w http.ResponseWriter, r *http.Request) {
+	// Set cookie and execute template
+	id := uuid.Must(uuid.NewRandom())
 	http.SetCookie(w, &http.Cookie{
-		Name:  "my-cookie",
-		Value: "this is my cookie",
+		Name:  "session",
+		Value: id.String(),
 	})
 	tpl.ExecuteTemplate(w, "index.gohtml", cubes)
 }
 
 func cubeDetail(w http.ResponseWriter, r *http.Request) {
 	// Get cookie or return an error if there is no cookie found
-	c, err := r.Cookie("my-cookie")
+	c, err := r.Cookie("session")
 	if err != nil {
 		fmt.Fprintf(w, "No cookie")
 		return
