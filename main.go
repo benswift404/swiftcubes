@@ -21,17 +21,35 @@ var tpl *template.Template
 var cubes []Cube
 
 func index(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:  "my-cookie",
+		Value: "this is my cookie",
+	})
 	tpl.ExecuteTemplate(w, "index.gohtml", cubes)
 }
 
 func cubeDetail(w http.ResponseWriter, r *http.Request) {
+	// Get cookie or return an error if there is no cookie found
+	c, err := r.Cookie("my-cookie")
+	if err != nil {
+		fmt.Fprintf(w, "No cookie")
+		return
+	}
+
+	// Get URL variable, convert to int, then put cube instance into cube variable
 	vars := mux.Vars(r)
 	id_int, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		panic(err)
 	}
 	cube := cubes[id_int]
-	tpl.ExecuteTemplate(w, "detail.gohtml", cube)
+
+	// Get data packed into struct for the template
+	data := struct {
+		Cube   Cube
+		Cookie *http.Cookie
+	}{cube, c}
+	tpl.ExecuteTemplate(w, "detail.gohtml", data)
 }
 
 func init() {
